@@ -1,11 +1,12 @@
-const { log } = require('console');
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  maxHttpBufferSize: 1e8
+});
 
 app.use(express.static(__dirname + '/public'));
 
@@ -18,6 +19,10 @@ io.on('connection', (socket) => {
 
   socket.on('message', (data) => {
     socket.broadcast.emit('message', data);
+  });
+
+  socket.on('file', (file) => {
+    socket.broadcast.emit('file', file);
   });
 
   socket.on('disconnect', () => {

@@ -1,90 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="index.css" />
-    <title>Chat Sync</title>
-  </head>
-  <body>
-    <section class="msger">
-      <header class="msger-header">
-        <div class="msger-header-title">
-          <i class="fas fa-comment-alt"></i> Chat Sync
-        </div>
-        <div class="msger-header-options">
-          <span><i class="fas fa-cog"></i></span>
-        </div>
-      </header>
 
-      <main id="messages" class="msger-chat">
-        <div class="msg left-msg">
-          <div class="msg-bubble">
-            <div class="msg-text">
-              Hi, welcome to Chat Sync! Go ahead and send me a message. 😄
-            </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="index.css" />
+  <title>Chat Sync</title>
+</head>
+
+<body>
+  <section class="msger">
+    <header class="msger-header">
+      <div class="msger-header-title">
+        <i class="fas fa-comment-alt"></i> Chat Sync
+      </div>
+      <div class="msger-header-options">
+        <span><i class="fas fa-cog"></i></span>
+      </div>
+    </header>
+
+    <main id="messages" class="msger-chat">
+      <div class="msg left-msg">
+        <div class="msg-bubble">
+          <div class="msg-text">
+            Hi, welcome to Chat Sync! Go ahead and send me a message. 😄
           </div>
         </div>
+      </div>
+    </main>
 
-        <!--div class="msg right-msg">
-          <div
-            class="msg-img"
-            style="
-              background-image: url(https://image.flaticon.com/icons/svg/145/145867.svg);
-            "
-          ></div>
+    <form id="form" class="msger-inputarea">
+      <input id="message" type="text" class="msger-input" placeholder="Enter your message..." />
+      <input type="file" id="fileinput" hidden onchange="upload()" />
+      <label style="padding:0px;" for="fileinput">
+        <img
+          src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsTAAALEwEAmpwYAAABT0lEQVR4nOWTTStFURSGnxvKJZQ4iIk79DUwo8RA4YpI6OZfyO9RismN/2DsY3TGiuIHoG6JolXv0e50zj3ntO8dyFt7sNda+3n32h/w39QNnAD3wBvwAlwAc62AB8At8J0wPoAjX3go2BNwCEwA88CZYzLrCw81j+tU+fN2wE0zqnmmDXDTsOpe8YQHwB1wHavfU63lMtULPKTAQ8VvYpt5VPw4j8E68C6TIEdHrqn9k6YaBWp60wOKDeWAZ93RrxZlMOXErloFN23LoE/zHuALaKg7L7jpQAYdCQbjwFgK3M5+DVjNMtiVQdmJXQrY0EiCV7XOTJpqRYWTTmwQqAOfGnVdfBxezfOKKiredI4pUjnWWWG4qSS4LVpKMHE/Y2F4pH59/aiTii67U7lpJ79RFO6aRDuspQzrsAsPlXTZy8AOsA9sAQvAiA/4b+kHLc1l2epEcx4AAAAASUVORK5CYII=">
+      </label>
 
-          <div class="msg-bubble">
-            <div class="msg-info">
-              <div class="msg-info-name">Sajad</div>
-              <div class="msg-info-time">12:46</div>
-            </div>
+      <button type="submit" class="msger-send-btn">Send</button>
+    </form>
+  </section>
+  <script src="/socket.io/socket.io.js"></script>
 
-            <div class="msg-text">You can change your name in JS section!</div>
-          </div>
-        </div-->
+  <script>
+    const form = document.getElementById("form");
+    const fileInput = document.getElementById("fileinput");
+    const msgerInput = document.getElementById("message");
+    const msgerChat = document.getElementById("messages");
+    const socket = io();
 
-      </main>
+    function upload() {
+      const reader = new FileReader();
+      const file = fileInput.files[0];
+      if (file) {
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+          const fileContent = reader.result;
 
-      <form id="form" class="msger-inputarea">
-        <input
-          id="message"
-          type="text"
-          class="msger-input"
-          placeholder="Enter your message..."
-        />
-        <button type="submit" class="msger-send-btn">Send</button>
-      </form>
-    </section>
+          const msgHTML = `<div class="msg right-msg"><div class="msg-bubble"><div class="msg-text">${file.name}</div><div><a href="${fileContent}" download="${file.name}">Download</a></div></div></div>`;
+          msgerChat.insertAdjacentHTML("beforeend", msgHTML);
+          msgerChat.scrollTop += 500;
 
-    <script src="/socket.io/socket.io.js"></script>
+          socket.emit("file", {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            data: fileContent
+          });
+          fileInput.value = "";
+        };
+      }
+    }
 
-    <script>
-      const form = document.getElementById("form");
-      const msgerInput = document.getElementById("message");
-      const msgerChat = document.getElementById("messages");
-      const socket = io();
-
-      form.addEventListener("submit", function (event) {
-        event.preventDefault();
-
-        const msgText = msgerInput.value;
-        console.log(msgText);
-
-        const msgHTM = `<div class="msg right-msg"><div class="msg-bubble"><div class="msg-text">${msgText}</div></div></div>`;
-        msgerChat.insertAdjacentHTML("beforeend", msgHTM);
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const msgText = msgerInput.value;
+      if (msgText) {
+        const msgHTML = `<div class="msg right-msg"><div class="msg-bubble"><div class="msg-text">${msgText}</div></div></div>`;
+        msgerChat.insertAdjacentHTML("beforeend", msgHTML);
         msgerChat.scrollTop += 500;
 
         socket.emit("message", msgText);
         msgerInput.value = "";
-      });
+      }
+    });
 
-      socket.on("message", (msg) => {
-        console.log("server", msg);
-        const msgHTML = `<div class="msg left-msg"><div class="msg-bubble"><div class="msg-text">${msg}</div></div></div>`;
-        msgerChat.insertAdjacentHTML("beforeend", msgHTML);
-        msgerChat.scrollTop += 500;
-      });
-    </script>
-  </body>
+    socket.on("message", (msg) => {
+
+      const msgHTML = `<div class="msg left-msg"><div class="msg-bubble"><div class="msg-text">${msg}</div></div></div>`;
+
+      msgerChat.insertAdjacentHTML("beforeend", msgHTML);
+      msgerChat.scrollTop += 500;
+    });
+
+    socket.on("file", (file) => {
+      console.log(file.name);
+      const msgHTML = `<div class="msg left-msg"><div class="msg-bubble"><div class="msg-text">${file.name}</div><div><a href="${file.data}" download="${file.name}">Download</a></div></div></div>`;
+
+      msgerChat.insertAdjacentHTML("beforeend", msgHTML);
+      msgerChat.scrollTop += 500;
+    });
+  </script>
+</body>
+
 </html>
