@@ -21,7 +21,7 @@
         <div class="msg left-msg">
           <div class="msg-bubble">
             <div class="msg-text">
-              Hi, welcome to Chat Sync! Go ahead and send me a message. 😄
+              Hi, welcome to Chat Sync! Go ahead and send a message. 😄
             </div>
           </div>
         </div>
@@ -47,6 +47,7 @@
       </main>
 
       <form id="form" class="msger-inputarea">
+      <!--input type="file" onchange=upload(this.files) /-->
         <input
           id="message"
           type="text"
@@ -69,6 +70,7 @@
         event.preventDefault();
 
         const msgText = msgerInput.value;
+        if(msgerInput.value === "")return;
         console.log(msgText);
 
         const msgHTM = `<div class="msg right-msg"><div class="msg-bubble"><div class="msg-text">${msgText}</div></div></div>`;
@@ -85,6 +87,12 @@
         msgerChat.insertAdjacentHTML("beforeend", msgHTML);
         msgerChat.scrollTop += 500;
       });
+
+      // function upload(files) {
+      //   socket.emit("upload", files[0], (status) => {
+      //     console.log(status);
+      //   });
+      // }
     </script>
   </body>
 </html>
