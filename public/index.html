@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="index.css" />
-    <title>Chat Sync</title>
-  </head>
-  <body>
-    <section class="msger">
-      <header class="msger-header">
-        <div class="msger-header-title">
-          <i class="fas fa-comment-alt"></i> Chat Sync
-        </div>
-        <div class="msger-header-options">
-          <span><i class="fas fa-cog"></i></span>
-        </div>
-      </header>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="index.css" />
+  <title>Chat Sync</title>
+</head>
+
+<body>
+  <section class="msger">
+    <header class="msger-header">
+      <div class="msger-header-title">
+        <i class="fas fa-comment-alt"></i> Chat Sync
+      </div>
+      <div class="msger-header-options">
+        <span><i class="fas fa-cog"></i></span>
+      </div>
+    </header>
 
       <main id="messages" class="msger-chat">
         <div class="msg left-msg">
@@ -60,11 +62,35 @@
 
     <script src="/socket.io/socket.io.js"></script>
 
-    <script>
-      const form = document.getElementById("form");
-      const msgerInput = document.getElementById("message");
-      const msgerChat = document.getElementById("messages");
-      const socket = io();
+  <script>
+    const form = document.getElementById("form");
+    const fileInput = document.getElementById("fileinput");
+    const msgerInput = document.getElementById("message");
+    const msgerChat = document.getElementById("messages");
+    const socket = io();
+
+    function upload() {
+      const reader = new FileReader();
+      const file = fileInput.files[0];
+      if (file) {
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+          const fileContent = reader.result;
+
+          const msgHTML = `<div class="msg right-msg"><div class="msg-bubble"><div class="msg-text">${file.name}</div><div><a href="${fileContent}" download="${file.name}">Download</a></div></div></div>`;
+          msgerChat.insertAdjacentHTML("beforeend", msgHTML);
+          msgerChat.scrollTop += 500;
+
+          socket.emit("file", {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            data: fileContent
+          });
+          fileInput.value = "";
+        };
+      }
+    }
 
       form.addEventListener("submit", function (event) {
         event.preventDefault();
@@ -79,7 +105,8 @@
 
         socket.emit("message", msgText);
         msgerInput.value = "";
-      });
+      }
+    });
 
       socket.on("message", (msg) => {
         console.log("server", msg);
