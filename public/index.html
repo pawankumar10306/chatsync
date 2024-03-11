@@ -106,7 +106,7 @@
         socket.emit("message", msgText);
         msgerInput.value = "";
       }
-    });
+    );
 
       socket.on("message", (msg) => {
         console.log("server", msg);
